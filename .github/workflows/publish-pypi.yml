@@ -3,6 +3,7 @@ name: Publish Python package
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -10,7 +11,9 @@ permissions:
 jobs:
   publish:
     name: Build and publish to PyPI
-    if: startsWith(github.event.release.tag_name, 'v')
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      startsWith(github.event.release.tag_name, 'v')
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -34,4 +37,4 @@ jobs:
         run: python -m build
 
       - name: Publish distributions
-        uses: pypa/gh-action-pypi-publish@6733eb7d741f0b11ec6a39b58540dab7590f9b7d
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b
