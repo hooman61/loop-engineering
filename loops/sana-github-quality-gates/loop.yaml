@@ -106,7 +106,7 @@ metadata:
   source_docs:
     - ../../docs/standards/loop-contract.md
     - ../../docs/standards/quality-gates.md
-    - ../../targets/sana-tank-monitor-django-test-a082b77/docs/operations/github-actions-quality-gates.md
+    - baseline.md
   tags:
     - sana
     - github-actions

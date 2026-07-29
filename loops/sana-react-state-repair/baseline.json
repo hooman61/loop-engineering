@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "source_run_id": "inspection-20260729T154531Z-e3837d27",
+  "captured_at": "2026-07-29",
+  "project_id": "sana-tank-monitor-django-test-a082b77",
+  "sensor": {
+    "tool": "react-doctor",
+    "tool_version": "0.9.2",
+    "diagnostic_count": 366,
+    "error_count": 1,
+    "warning_count": 365,
+    "affected_file_count": 24,
+    "scanned_file_count": 40
+  },
+  "selected_finding": {
+    "fingerprint": "e1c943c393025ff54f7c",
+    "severity": "error",
+    "category": "Bugs",
+    "rule": "react-doctor/no-impure-state-updater",
+    "file": "src/App.tsx",
+    "line": 974,
+    "column": 22,
+    "title": "State updater has side effects",
+    "message": "The state updater performs the nested state update setUserRole()."
+  },
+  "provenance": {
+    "kind": "normalized-extract",
+    "source_report": "local read-only LangGraph observer",
+    "source_report_committed": false,
+    "reason": "The original report contained machine-specific absolute paths and verbose evidence. This portable baseline retains the approved fingerprint and deterministic sensor counts."
+  }
+}

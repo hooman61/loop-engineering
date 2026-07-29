@@ -26,7 +26,7 @@ sensor:
   deterministic_checks:
     - node tools/react-doctor/scan.mjs targets/sana-tank-monitor-django-test-a082b77 --no-score --no-telemetry --no-supply-chain
   agent_checks: []
-  baseline_file: ../../artifacts/runs/inspection-20260729T154531Z-e3837d27/findings.json
+  baseline_file: baseline.json
   output_format: json
   stable_sort: severity,category,file,line,column,rule,fingerprint
   on_error: stop
