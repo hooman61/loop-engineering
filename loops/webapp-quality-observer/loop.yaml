@@ -1,0 +1,102 @@
+$schema: ../../schemas/loop-definition.schema.json
+schema_version: "1.0"
+id: webapp-quality-observer
+title: Read-only Django React PostgreSQL quality observer
+status: draft
+risk_level: read_only
+
+owner:
+  team: replace-with-product-owner
+  approver: replace-with-human-approver
+
+objective: >-
+  Measure frontend, backend, database, and integration quality with deterministic
+  commands, select one evidence-backed target, and make no product changes.
+
+setpoint:
+  description: All configured inspectors produce trustworthy and repeatable evidence.
+  success_conditions:
+    - Every enabled inspector completes without a tool error.
+    - Repeated runs on the same revision produce the same ordered finding fingerprints.
+    - The inspected Git repository is unchanged after every observation run.
+    - At most one target is selected for human consideration.
+
+sensor:
+  deterministic_checks:
+    - python scripts/run_inspection.py validate config/inspection.local.yaml
+    - python scripts/run_inspection.py run config/inspection.local.yaml --runtime langgraph
+  agent_checks: []
+  baseline_file: null
+  output_format: json
+  stable_sort: severity score descending, inspector, check id, fingerprint
+  on_error: stop
+
+controller:
+  selection_policy: Select the first finding from the deterministic total ordering.
+  batch_size: 1
+  priority_inputs:
+    - severity
+    - configured priority
+    - inspector name
+    - check id
+
+actuator:
+  skill_file: skill.md
+  golden_patterns:
+    - golden-patterns.md
+  allowed_paths:
+    - artifacts/**
+  denied_paths:
+    - target-product/**
+    - .env
+    - "**/*secret*"
+  max_files_changed: 1
+
+verification:
+  commands:
+    - python -m unittest discover -s tests -t . -v
+    - python scripts/validate_loop.py --all
+  required_evidence:
+    - machine-readable report
+    - stable finding fingerprints
+    - before and after repository fingerprints
+  independent_agent_review: false
+
+flow_control:
+  max_open_outputs: 1
+  portfolio_capacity_key: default-review-queue
+  behavior_when_blocked: no_op
+  schedule: null
+
+human_gate:
+  required: true
+  approver: replace-with-human-approver
+  feedback_file: feedback.md
+  iterate_trigger: /iterate
+
+limits:
+  max_runtime_minutes: 60
+  max_actuation_attempts: 1
+  max_diff_lines: 1
+  max_cost_usd: 0
+
+stop_conditions:
+  - Any inspector fails to produce trustworthy evidence.
+  - The inspected repository changes during an observation run.
+  - A configured command escapes the target project root.
+  - Evidence may contain a credential or sensitive production data.
+  - The same revision produces inconsistent ordered fingerprints.
+
+metadata:
+  source_docs:
+    - ../../docs/architecture/stage-1-read-only-inspection.md
+    - ../../docs/standards/loop-contract.md
+    - ../../docs/standards/quality-gates.md
+    - ../../tools/react-doctor/README.md
+  tags:
+    - read-only
+    - webapp-quality
+    - django
+    - react
+    - react-doctor
+    - postgresql

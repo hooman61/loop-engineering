@@ -1,0 +1,114 @@
+$schema: ../../schemas/loop-definition.schema.json
+schema_version: "1.0"
+id: sana-github-quality-gates
+title: Sana GitHub Actions quality-gate delivery loop
+status: shadow
+risk_level: low
+
+owner:
+  team: sana-product-owner
+  approver: workspace-human-owner
+
+objective: >-
+  Provide portable read-only GitHub Actions gates for Sana frontend, backend,
+  PostgreSQL migration, integration, and React Doctor evidence.
+
+setpoint:
+  description: Every pull request receives independent deterministic quality evidence.
+  success_conditions:
+    - The workflow has read-only repository permissions.
+    - Frontend, backend, and database jobs run independently.
+    - Integration waits for every specialist job.
+    - React Doctor errors block CI while warning evidence remains downloadable.
+    - PostgreSQL migrations are applied to an ephemeral PostgreSQL service.
+    - One stable final job can be required by branch protection.
+
+sensor:
+  deterministic_checks:
+    - python scripts/validate_loop.py loops/sana-github-quality-gates/loop.yaml
+    - node --check .github/tools/react-doctor/scan.mjs
+    - node --check .github/scripts/enforce-react-doctor.mjs
+    - npm run lint
+    - npm run build -- --outDir backend/frontend_dist
+    - backend/.venv/Scripts/python.exe backend/manage.py check
+    - backend/.venv/Scripts/python.exe backend/manage.py test apps --verbosity 1
+    - backend/.venv/Scripts/python.exe backend/manage.py makemigrations --check --dry-run
+    - backend/.venv/Scripts/python.exe backend/manage.py test config --verbosity 1
+  agent_checks: []
+  baseline_file: baseline.md
+  output_format: text
+  stable_sort: job,check,path
+  on_error: stop
+
+controller:
+  selection_policy: Deliver only the approved GitHub Actions quality-gate work package.
+  batch_size: 1
+  priority_inputs:
+    - security_boundary
+    - deterministic_coverage
+    - portability
+
+actuator:
+  skill_file: skill.md
+  golden_patterns:
+    - golden-patterns.md
+  allowed_paths:
+    - targets/sana-tank-monitor-django-test-a082b77/.github/**
+    - targets/sana-tank-monitor-django-test-a082b77/docs/operations/github-actions-quality-gates.md
+  denied_paths:
+    - C:/Users/huoman/Documents/monitoring/sana-tank-monitor-django/**
+    - targets/sana-tank-monitor-django-test-a082b77/.env*
+    - targets/sana-tank-monitor-django-test-a082b77/backend/migrations/**
+    - "**/*secret*"
+  max_files_changed: 6
+
+verification:
+  commands:
+    - python -m unittest discover -s tests -t . -v
+    - python scripts/validate_loop.py --all
+    - node .github/scripts/enforce-react-doctor.mjs artifacts/react-doctor.json
+  required_evidence:
+    - workflow_structure_validation
+    - pinned_action_revisions
+    - local_product_gate_results
+    - react_doctor_json
+    - target_git_diff
+  independent_agent_review: false
+
+flow_control:
+  max_open_outputs: 1
+  portfolio_capacity_key: default-review-queue
+  behavior_when_blocked: no_op
+  schedule: null
+
+human_gate:
+  required: true
+  approver: workspace-human-owner
+  feedback_file: feedback.md
+  iterate_trigger: /iterate
+
+limits:
+  max_runtime_minutes: 90
+  max_actuation_attempts: 2
+  max_diff_lines: 10000
+  max_cost_usd: 0
+
+stop_conditions:
+  - The workflow requests write permission.
+  - The workflow uses pull_request_target.
+  - The workflow requires a production secret or database.
+  - A third-party action is not pinned to a full commit SHA.
+  - A previously passing local product gate fails.
+  - The workflow edits, commits, merges, deploys, or publishes product state.
+  - The change touches the original Sana source before human approval.
+
+metadata:
+  source_docs:
+    - ../../docs/standards/loop-contract.md
+    - ../../docs/standards/quality-gates.md
+    - ../../targets/sana-tank-monitor-django-test-a082b77/docs/operations/github-actions-quality-gates.md
+  tags:
+    - sana
+    - github-actions
+    - continuous-integration
+    - quality-gates

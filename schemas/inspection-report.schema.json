@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loop-engineering.local/schemas/inspection-report.schema.json",
+  "title": "Read-only Inspection Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "project_id",
+    "status",
+    "runtime",
+    "started_at",
+    "completed_at",
+    "inspectors",
+    "findings",
+    "selected_target",
+    "repository_guard",
+    "stop_reasons",
+    "warnings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^inspection-[0-9]{8}T[0-9]{6}Z-[a-f0-9]{8}$"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": ["accepted", "needs_human_input", "aborted_safely"]
+    },
+    "runtime": {
+      "enum": ["langgraph", "stdlib-fallback"]
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "inspectors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/inspector_result"
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "selected_target": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/finding"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "repository_guard": {
+      "type": "object",
+      "required": ["before", "after"],
+      "properties": {
+        "before": {
+          "$ref": "#/$defs/repository_snapshot"
+        },
+        "after": {
+          "$ref": "#/$defs/repository_snapshot"
+        }
+      },
+      "additionalProperties": false
+    },
+    "stop_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "severity": {
+      "enum": ["info", "low", "medium", "high", "critical"]
+    },
+    "check_result": {
+      "type": "object",
+      "required": [
+        "inspector",
+        "check_id",
+        "title",
+        "status",
+        "severity",
+        "priority",
+        "command",
+        "working_directory",
+        "exit_code",
+        "duration_ms",
+        "evidence",
+        "error_kind"
+      ],
+      "properties": {
+        "inspector": {
+          "type": "string"
+        },
+        "check_id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "enum": ["passed", "finding", "tool_error", "skipped"]
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "priority": {
+          "type": "integer"
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "working_directory": {
+          "type": "string"
+        },
+        "exit_code": {
+          "type": ["integer", "null"]
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "error_kind": {
+          "type": ["string", "null"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "inspector_result": {
+      "type": "object",
+      "required": ["inspector", "status", "checks"],
+      "properties": {
+        "inspector": {
+          "enum": ["frontend", "backend", "database", "integration"]
+        },
+        "status": {
+          "enum": ["passed", "findings", "error", "skipped"]
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/check_result"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "finding": {
+      "type": "object",
+      "required": [
+        "fingerprint",
+        "project_id",
+        "inspector",
+        "check_id",
+        "title",
+        "severity",
+        "priority",
+        "score",
+        "evidence",
+        "command",
+        "working_directory"
+      ],
+      "properties": {
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{20}$"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "inspector": {
+          "type": "string"
+        },
+        "check_id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "priority": {
+          "type": "integer"
+        },
+        "score": {
+          "type": "integer"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "working_directory": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "repository_snapshot": {
+      "type": "object",
+      "required": [
+        "available",
+        "repository_root",
+        "commit",
+        "status_lines",
+        "content_fingerprint",
+        "warning"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "repository_root": {
+          "type": ["string", "null"]
+        },
+        "commit": {
+          "type": ["string", "null"]
+        },
+        "status_lines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "content_fingerprint": {
+          "type": ["string", "null"]
+        },
+        "warning": {
+          "type": ["string", "null"]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
+

@@ -1,0 +1,84 @@
+# Copy this file to config/inspection.local.yaml and replace the project path and
+# commands with facts verified in the target repository. Never put credentials
+# or production connection strings in this file.
+$schema: ../schemas/inspection-profile.schema.json
+schema_version: "1.0"
+
+project:
+  id: replace-with-project-id
+  root: C:/replace/with/absolute/path/to/webapp
+
+read_only:
+  require_git_repository: true
+  require_clean_start: false
+  fail_on_change: true
+
+stop_on_inspector_error: true
+max_evidence_chars: 4000
+
+inspectors:
+  frontend:
+    enabled: true
+    checks:
+      - id: frontend-lint
+        title: Frontend lint policy
+        command: [npm, run, lint]
+        working_directory: frontend
+        timeout_seconds: 300
+        success_exit_codes: [0]
+        # Optional: reserve process codes that mean the scanner itself failed.
+        tool_error_exit_codes: []
+        severity_on_failure: medium
+        priority: 30
+      - id: frontend-test
+        title: Frontend unit tests
+        command: [npm, run, test, --, --run]
+        working_directory: frontend
+        timeout_seconds: 600
+        success_exit_codes: [0]
+        severity_on_failure: high
+        priority: 50
+
+  backend:
+    enabled: true
+    checks:
+      - id: django-check
+        title: Django system checks
+        command: [python, manage.py, check]
+        working_directory: backend
+        timeout_seconds: 300
+        success_exit_codes: [0]
+        severity_on_failure: high
+        priority: 70
+      - id: backend-test
+        title: Backend test suite
+        command: [python, -m, pytest]
+        working_directory: backend
+        timeout_seconds: 900
+        success_exit_codes: [0]
+        severity_on_failure: high
+        priority: 80
+
+  database:
+    enabled: true
+    checks:
+      - id: migration-drift
+        title: Django migration drift
+        command: [python, manage.py, makemigrations, --check, --dry-run]
+        working_directory: backend
+        timeout_seconds: 300
+        success_exit_codes: [0]
+        severity_on_failure: high
+        priority: 90
+
+  integration:
+    enabled: true
+    checks:
+      - id: end-to-end-smoke
+        title: Cross-layer smoke tests
+        command: [npm, run, test:e2e]
+        working_directory: frontend
+        timeout_seconds: 900
+        success_exit_codes: [0]
+        severity_on_failure: critical
+        priority: 100

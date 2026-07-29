@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.npm-cache/
+tools/react-doctor/node_modules/
+artifacts/
+build/
+dist/
+config/inspection.local.yaml
+targets/

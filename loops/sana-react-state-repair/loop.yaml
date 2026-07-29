@@ -1,0 +1,108 @@
+$schema: ../../schemas/loop-definition.schema.json
+schema_version: "1.0"
+id: sana-react-state-repair
+title: Bounded Sana React state-updater repair loop
+status: shadow
+risk_level: medium
+
+owner:
+  team: sana-product-owner
+  approver: workspace-human-owner
+
+objective: >-
+  Remove one sensor-selected impure React state updater from the versioned Sana
+  test copy without changing session behavior or introducing new violations.
+
+setpoint:
+  description: The selected impure updater is absent and all existing deterministic gates pass.
+  success_conditions:
+    - React Doctor no longer reports fingerprint e1c943c393025ff54f7c.
+    - React Doctor reports zero errors.
+    - TypeScript and the production frontend build pass.
+    - Django application, migration, and route-contract checks pass.
+    - Only the selected App.tsx file changes in the product copy.
+
+sensor:
+  deterministic_checks:
+    - node tools/react-doctor/scan.mjs targets/sana-tank-monitor-django-test-a082b77 --no-score --no-telemetry --no-supply-chain
+  agent_checks: []
+  baseline_file: ../../artifacts/runs/inspection-20260729T154531Z-e3837d27/findings.json
+  output_format: json
+  stable_sort: severity,category,file,line,column,rule,fingerprint
+  on_error: stop
+
+controller:
+  selection_policy: Repair only the human-approved selected fingerprint from the observer report.
+  batch_size: 1
+  priority_inputs:
+    - approved_fingerprint
+    - severity
+    - estimated_change_size
+
+actuator:
+  skill_file: skill.md
+  golden_patterns:
+    - golden-patterns.md
+  allowed_paths:
+    - targets/sana-tank-monitor-django-test-a082b77/src/App.tsx
+  denied_paths:
+    - C:/Users/huoman/Documents/monitoring/sana-tank-monitor-django/**
+    - targets/sana-tank-monitor-django-test-a082b77/backend/**
+    - targets/sana-tank-monitor-django-test-a082b77/.env*
+    - "**/*secret*"
+  max_files_changed: 1
+
+verification:
+  commands:
+    - npm run lint
+    - node ../../tools/react-doctor/scan.mjs . --no-score --no-telemetry --no-supply-chain
+    - npm run build -- --outDir backend/frontend_dist
+    - backend/.venv/Scripts/python.exe backend/manage.py check
+    - backend/.venv/Scripts/python.exe backend/manage.py test apps --verbosity 1
+    - backend/.venv/Scripts/python.exe backend/manage.py makemigrations --check --dry-run
+    - backend/.venv/Scripts/python.exe backend/manage.py test config --verbosity 1
+  required_evidence:
+    - approved_before_fingerprint
+    - focused_source_diff
+    - post_change_react_doctor_json
+    - full_langgraph_inspection_report
+    - target_git_status
+  independent_agent_review: false
+
+flow_control:
+  max_open_outputs: 1
+  portfolio_capacity_key: default-review-queue
+  behavior_when_blocked: no_op
+  schedule: null
+
+human_gate:
+  required: true
+  approver: workspace-human-owner
+  feedback_file: feedback.md
+  iterate_trigger: /iterate
+
+limits:
+  max_runtime_minutes: 60
+  max_actuation_attempts: 1
+  max_diff_lines: 25
+  max_cost_usd: 0
+
+stop_conditions:
+  - The selected fingerprint is absent before actuation.
+  - The repair requires any file other than the approved App.tsx.
+  - The source repository changes.
+  - React Doctor still reports an error after one actuation attempt.
+  - Any previously passing deterministic verification check fails.
+  - The focused diff exceeds 25 changed lines.
+  - Verification requires credentials or production data.
+
+metadata:
+  source_docs:
+    - ../../docs/standards/loop-contract.md
+    - ../../docs/standards/quality-gates.md
+    - ../webapp-quality-observer/iteration-report.md
+  tags:
+    - sana
+    - react
+    - state-purity
+    - bounded-repair

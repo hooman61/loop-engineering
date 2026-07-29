@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loop-engineering.local/schemas/portfolio.schema.json",
+  "title": "Loop Portfolio Configuration",
+  "description": "Global review-capacity and flow-control configuration for all loops.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "review_queues"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "active"
+      ]
+    },
+    "review_queues": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/review_queue"
+      }
+    }
+  },
+  "$defs": {
+    "review_queue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "max_open_outputs",
+        "max_active_loops",
+        "priority_policy",
+        "behavior_when_full"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "max_open_outputs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "max_active_loops": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "priority_policy": {
+          "enum": [
+            "manual",
+            "risk_then_age",
+            "age_only"
+          ]
+        },
+        "behavior_when_full": {
+          "enum": [
+            "no_op",
+            "queue",
+            "escalate"
+          ]
+        }
+      }
+    }
+  }
+}

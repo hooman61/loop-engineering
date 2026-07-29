@@ -1,0 +1,12 @@
+{
+  "name": "loop-engineering-react-doctor-toolchain",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pinned React Doctor runtime for deterministic loop sensors.",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "react-doctor": "0.9.2"
+  }
+}

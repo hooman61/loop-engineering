@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loop-engineering.local/schemas/inspection-profile.schema.json",
+  "title": "Read-only Web Application Inspection Profile",
+  "description": "Commands and safety policy for one stage-one product inspection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project",
+    "read_only",
+    "stop_on_inspector_error",
+    "max_evidence_chars",
+    "inspectors"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "root"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "read_only": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "require_git_repository",
+        "require_clean_start",
+        "fail_on_change"
+      ],
+      "properties": {
+        "require_git_repository": {
+          "type": "boolean"
+        },
+        "require_clean_start": {
+          "type": "boolean"
+        },
+        "fail_on_change": {
+          "const": true
+        }
+      }
+    },
+    "stop_on_inspector_error": {
+      "const": true
+    },
+    "max_evidence_chars": {
+      "type": "integer",
+      "minimum": 256,
+      "maximum": 100000
+    },
+    "inspectors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["frontend", "backend", "database", "integration"],
+      "properties": {
+        "frontend": {
+          "$ref": "#/$defs/inspector"
+        },
+        "backend": {
+          "$ref": "#/$defs/inspector"
+        },
+        "database": {
+          "$ref": "#/$defs/inspector"
+        },
+        "integration": {
+          "$ref": "#/$defs/inspector"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "inspector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "checks"],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/check"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            },
+            "required": ["enabled"]
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "command",
+        "working_directory",
+        "timeout_seconds",
+        "success_exit_codes",
+        "severity_on_failure",
+        "priority"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "working_directory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "success_exit_codes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer"
+          }
+        },
+        "tool_error_exit_codes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "integer"
+          }
+        },
+        "severity_on_failure": {
+          "enum": ["info", "low", "medium", "high", "critical"]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": -1000,
+          "maximum": 1000
+        }
+      }
+    }
+  }
+}

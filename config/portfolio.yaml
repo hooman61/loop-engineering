@@ -1,0 +1,12 @@
+# Replace placeholder ownership before activating the first product-changing loop.
+$schema: ../schemas/portfolio.schema.json
+schema_version: "1.0"
+status: draft
+
+review_queues:
+  default-review-queue:
+    owner: replace-with-portfolio-owner
+    max_open_outputs: 1
+    max_active_loops: 1
+    priority_policy: manual
+    behavior_when_full: no_op

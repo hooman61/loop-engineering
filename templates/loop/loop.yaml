@@ -1,0 +1,96 @@
+# Copy this entire directory to loops/<loop-id>/ and replace every example value.
+$schema: ../../schemas/loop-definition.schema.json
+schema_version: "1.0"
+
+id: example-quality-loop
+title: Example bounded product-quality loop
+status: draft
+risk_level: medium
+
+owner:
+  team: replace-with-owning-team
+  approver: replace-with-human-approver
+
+objective: >-
+  Reduce one measurable class of product-quality defect through small,
+  independently verified changes without introducing new violations.
+
+setpoint:
+  description: The selected defect class is absent and new instances are blocked.
+  success_conditions:
+    - The deterministic sensor reports zero remaining violations.
+    - Changed files introduce no new violations.
+
+sensor:
+  deterministic_checks:
+    - replace-with-sensor-command --format json
+  agent_checks: []
+  baseline_file: null
+  output_format: json
+  stable_sort: severity,file,rule_id
+  on_error: stop
+
+controller:
+  selection_policy: Select the smallest highest-severity valid target.
+  batch_size: 1
+  priority_inputs:
+    - severity
+    - estimated_change_size
+
+actuator:
+  skill_file: skill.md
+  golden_patterns:
+    - golden-patterns.md
+  allowed_paths:
+    - src/**
+    - tests/**
+  denied_paths:
+    - .env*
+    - secrets/**
+    - migrations/**
+  max_files_changed: 5
+
+verification:
+  commands:
+    - replace-with-test-command
+    - replace-with-sensor-command --format json
+  required_evidence:
+    - before_sensor_output
+    - after_sensor_output
+    - test_results
+    - diff_summary
+  independent_agent_review: true
+
+flow_control:
+  max_open_outputs: 1
+  portfolio_capacity_key: default-review-queue
+  behavior_when_blocked: no_op
+  schedule: null
+
+human_gate:
+  required: true
+  approver: replace-with-human-approver
+  feedback_file: feedback.md
+  iterate_trigger: /iterate
+
+limits:
+  max_runtime_minutes: 30
+  max_actuation_attempts: 2
+  max_diff_lines: 300
+  max_cost_usd: null
+
+stop_conditions:
+  - The sensor fails or produces non-reproducible output.
+  - The selected target requires a denied path.
+  - Verification requires weakening an existing check.
+  - The change exceeds a configured limit.
+  - Human feedback is contradictory or changes the objective.
+
+metadata:
+  source_docs:
+    - ../../docs/architecture/reference-loop-architecture.md
+    - ../../docs/standards/loop-contract.md
+    - ../../docs/standards/quality-gates.md
+  tags:
+    - example
+    - product-quality
